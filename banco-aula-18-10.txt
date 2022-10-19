@@ -1,0 +1,93 @@
+
+create or REPLACE VIEW viewPermissoes as (
+SELECT u.id AS id_usuario, u.nome_usuario, pu.nome AS perfil_permissao, pu.slug AS slug_perfil, '' AS slug_acao FROM usuarios u
+ inner join perfis_usuario pu ON u.id_perfil_usuario = pu.id 
+ WHERE (u.excluido = 0 OR u.excluido is null) AND (pu.excluido = 0 OR pu.excluido is null)
+ 
+ UNION
+ 
+SELECT u.id AS id_usuario, u.nome_usuario, au.nome AS acao_permissao, '' AS slug_perfil, au.slug AS slug_acao FROM usuarios u
+ inner join acoes_usuario au ON u.id = au.id_usuario 
+ WHERE (u.excluido = 0 OR u.excluido = null) AND (au.excluido = 0 OR au.excluido is null)
+) 
+
+select slug_perfil, slug_acao from viewPermissoes where id_usuario = 2
+
+
+SELECT qty from produtos where qty >= 4
+
+
+
+DROP TABLE `acoes_usuario`
+
+CREATE TABLE `acoes_usuario` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `nome` varchar(150) NOT NULL,
+  `slug` varchar(150) NOT NULL,
+  `descricao` varchar(255) DEFAULT NULL,
+  `excluido` tinyint(1) DEFAULT NULL,
+  
+  `id_usuario` tinyint(4) DEFAULT NULL,
+  `id_perfil_usuario` tinyint(4) DEFAULT NULL,
+  
+  `id_usuario_criacao` tinyint(4) NOT NULL,
+  `id_usuario_alteracao` tinyint(4) NOT NULL,
+  `id_usuario_exclusao` tinyint(4) DEFAULT NULL,
+  `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `data_alteracao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `data_exclusao` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `acoes_usuario_UN` (`nome`,`slug`, `excluido`, `id_usuario`, `id_perfil_usuario`),
+  CONSTRAINT `id_usuario_FK` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`),
+  CONSTRAINT `id_perfil_usuario_FK` FOREIGN KEY (`id_perfil_usuario`) REFERENCES `perfis_usuario` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+
+
+INSERT
+	INTO
+	php_lab.acoes_usuario
+(
+	nome,
+	slug,
+	descricao,
+	excluido,
+	id_usuario,
+	id_perfil_usuario,
+	id_usuario_criacao,
+	id_usuario_alteracao,
+	id_usuario_exclusao,
+	data_criacao,
+	data_alteracao,
+	data_exclusao
+)
+VALUES(
+'Pode ver salario',
+'pode_ver_salario',
+'Quem pode ver salarios da empresa',
+0,
+2,
+NULL,
+1,
+1,
+NULL,
+current_timestamp(),
+current_timestamp(),
+'0000-00-00 00:00:00'
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
