@@ -1,24 +1,53 @@
 
-create or REPLACE VIEW viewPermissoes as (
-SELECT u.id AS id_usuario, u.nome_usuario, pu.nome AS perfil_permissao, pu.slug AS slug_perfil, '' AS slug_acao FROM usuarios u
- inner join perfis_usuario pu ON u.id_perfil_usuario = pu.id 
- WHERE (u.excluido = 0 OR u.excluido is null) AND (pu.excluido = 0 OR pu.excluido is null)
- 
- UNION
- 
-SELECT u.id AS id_usuario, u.nome_usuario, au.nome AS acao_permissao, '' AS slug_perfil, au.slug AS slug_acao FROM usuarios u
- inner join acoes_usuario au ON u.id = au.id_usuario 
- WHERE (u.excluido = 0 OR u.excluido = null) AND (au.excluido = 0 OR au.excluido is null)
-) 
+DROP TABLE IF EXISTS `perfis_usuario`;
 
-select slug_perfil, slug_acao from viewPermissoes where id_usuario = 2
+CREATE TABLE `perfis_usuario` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `nome` varchar(150) NOT NULL,
+  `slug` varchar(150) NOT NULL,
+  `descricao` varchar(255) DEFAULT NULL,
+  `excluido` tinyint(1) DEFAULT NULL,
+  `id_usuario_criacao` tinyint(4) NOT NULL,
+  `id_usuario_alteracao` tinyint(4) NOT NULL,
+  `id_usuario_exclusao` tinyint(4) DEFAULT NULL,
+  `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `data_alteracao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `data_exclusao` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `perfis_usuario_nome_slug_UN` (`nome`,`slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4;
+
+LOCK TABLES `perfis_usuario` WRITE;
+INSERT INTO `perfis_usuario` VALUES (1,'administrador','administrador','admin do sistema',0,1,1,NULL,'2022-10-11 21:11:22','2022-10-11 21:11:22','0000-00-00 00:00:00'),(2,'Gerente','gerente','gerente do setor',0,1,1,NULL,'2022-10-11 21:12:44','2022-10-11 21:12:44','0000-00-00 00:00:00'),(3,'RH','rh','setor de recursos humanos',0,1,1,NULL,'2022-10-11 21:14:05','2022-10-11 21:14:05','0000-00-00 00:00:00'),(4,'Programador','programador','programadores da instituição',0,1,1,NULL,'2022-10-11 21:14:37','2022-10-11 21:14:37','0000-00-00 00:00:00'),(5,'Contabilidade','contabilidade','setor responsavel pelas contas',0,1,1,NULL,'2022-10-11 21:15:08','2022-10-11 21:15:08','0000-00-00 00:00:00'),(6,'Suporte','suporte','setor de ajuda',0,1,1,NULL,'2022-10-11 21:15:28','2022-10-11 21:15:28','0000-00-00 00:00:00'),(7,'Direcao Geral','direcao_geral','',0,1,1,NULL,'2022-10-11 21:16:23','2022-10-11 21:16:23','0000-00-00 00:00:00'),(8,'Direcao Departamento','direcao_departamento','direção de cada setor',0,1,1,NULL,'2022-10-11 21:16:46','2022-10-11 21:16:46','0000-00-00 00:00:00');
+UNLOCK TABLES;
 
 
-SELECT qty from produtos where qty >= 4
+DROP TABLE IF EXISTS `usuarios`;
+
+CREATE TABLE `usuarios` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `email` varchar(150) NOT NULL,
+  `senha` varchar(255) DEFAULT NULL,
+  `nome_usuario` varchar(100) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL,
+  `id_perfil_usuario` tinyint(4) DEFAULT NULL,
+  `excluido` tinyint(1) DEFAULT NULL,
+  `id_usuario_criacao` tinyint(4) NOT NULL,
+  `id_usuario_alteracao` tinyint(4) NOT NULL,
+  `id_usuario_exclusao` tinyint(4) DEFAULT NULL,
+  `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `data_alteracao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `data_exclusao` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `usuarios_UN` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+
+LOCK TABLES `usuarios` WRITE;
+INSERT INTO `usuarios` VALUES (1,'otto.arru@gmail.com','minhasenha','otto',1,1,0,1,1,NULL,'2022-10-04 21:26:29','2022-10-04 21:26:29','0000-00-00 00:00:00'),(2,'ottoarrueneto@hotmail.com','123456','venezo',1,1,NULL,1,0,NULL,'2022-10-11 19:59:38','2022-10-11 20:00:08','2022-10-11 20:00:08');
+UNLOCK TABLES;
 
 
-
-DROP TABLE `acoes_usuario`
+DROP TABLE IF EXISTS `acoes_usuario`;
 
 CREATE TABLE `acoes_usuario` (
   `id` tinyint(4) NOT NULL AUTO_INCREMENT,
@@ -41,7 +70,6 @@ CREATE TABLE `acoes_usuario` (
   CONSTRAINT `id_usuario_FK` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `id_perfil_usuario_FK` FOREIGN KEY (`id_perfil_usuario`) REFERENCES `perfis_usuario` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
-
 
 
 INSERT
@@ -79,15 +107,17 @@ current_timestamp(),
 
 
 
+CREATE OR REPLACE VIEW viewPermissoes as (
+SELECT u.id AS id_usuario, u.nome_usuario, pu.nome AS perfil_permissao, pu.slug AS slug_perfil, '' AS slug_acao FROM usuarios u
+ INNER JOIN perfis_usuario pu ON u.id_perfil_usuario = pu.id 
+ WHERE (u.excluido = 0 OR u.excluido is null) AND (pu.excluido = 0 OR pu.excluido is null)
+ 
+ UNION
+ 
+SELECT u.id AS id_usuario, u.nome_usuario, au.nome AS acao_permissao, '' AS slug_perfil, au.slug AS slug_acao FROM usuarios u
+ inner join acoes_usuario au ON u.id = au.id_usuario 
+ WHERE (u.excluido = 0 OR u.excluido = null) AND (au.excluido = 0 OR au.excluido is null)
+) 
 
-
-
-
-
-
-
-
-
-
-
+select slug_perfil, slug_acao from viewPermissoes;
 
