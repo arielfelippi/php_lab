@@ -13,7 +13,7 @@ $connection = mysqli_connect(
     $database,
     $port);
 
-$dontConnectiuon = $connection == null || $connection == false || $connection == [];
+$dontConnectiuon = ($connection == null || $connection == false || $connection == []);
 
 if ($dontConnectiuon) {
     echo "deu ruim, nao conectou no banco.";
@@ -21,4 +21,4 @@ if ($dontConnectiuon) {
 }
 
 // var_dump($connection);
-echo "Conexao realizada.";
+// echo "Conexao realizada.";
