@@ -10,6 +10,7 @@ class UsuariosModel {
     //['id => 1', 'nome' => 'ariel']
 
     public function __construct($conexao = null) {
+        
         if (!$conexao) {
             throw new Exception('Conexao nao pode ser nula.', 500);
         }
@@ -21,6 +22,14 @@ class UsuariosModel {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($dados);
         exit;
+    }
+
+    private function isValidID($id) {
+        if (!$id || !is_numeric($id) || $id == 0 ) {
+            return false;
+        }
+
+        return true;
     }
 
     // obtem todos os usuarios
@@ -38,9 +47,10 @@ class UsuariosModel {
 
     // obtem todos os usuarios
     public function getUser($id = 0) {
-        if (!$id || $id == 0 ) $this->retornoAPI();
+        
+        if (!$this->isValidID($id)) $this->retornoAPI();
 
-        $id = $id * 1; // 1
+        $id = $id * 1; // 1 || "1" || '1' is_numeric
 
         // $sql = "SELECT * FROM usuarios WHERE (excluido = 0 OR excluido is null) AND id = " . $id . ";"; // versao php 5 ate < 7
         $sql = "SELECT * FROM usuarios WHERE (excluido = 0 OR excluido is null) AND id = {$id};"; // versao php 7+
@@ -57,7 +67,7 @@ class UsuariosModel {
     }
 
     public function deleteUser($id = 0) {
-        if (!$id || $id == 0 ) $this->retornoAPI();
+        if (!$this->isValidID($id)) $this->retornoAPI();
 
         $id = $id * 1; // 1
 
@@ -65,6 +75,43 @@ class UsuariosModel {
         $users = $this->conexao->query($sql);
 
         if ($users) $this->retornoAPI(); // true ou false se foi deletado (soft delete)
+    }
+
+    public function upSertUser($id = 0, $dadosUsuario = []) {
+
+        $id = $id * 1; // 1
+
+        if ($id != 0 && !$this->isValidID($id)) $this->retornoAPI();
+
+        if (count($dadosUsuario) <= 0) {
+            $this->retornoAPI();
+        }
+
+
+        $camposTabela = [
+            'id' => 0,
+            'email' => '',
+            'senha' => '',
+            'nome_usuario' => '',
+            'status' => '',
+            'id_perfil_usuario' => 1,
+            'excluido' => '',
+            'id_usuario_criacao' => '',
+            'id_usuario_alteracao' => '',
+            'id_usuario_exclusao' => '',
+            'data_criacao' => '',
+            'data_alteracao' => '',
+            'data_exclusao' => '',
+        ];
+
+
+        $camposTabelaUpsert = array_merge($camposTabela, $dadosUsuario);
+
+
+        $sql = "UPDATE usuarios SET excluido = 1 WHERE id = {$id};";+
+        $users = $this->conexao->query($sql);
+
+
     }
 
 }
