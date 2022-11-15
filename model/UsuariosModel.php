@@ -77,41 +77,78 @@ class UsuariosModel {
         if ($users) $this->retornoAPI(); // true ou false se foi deletado (soft delete)
     }
 
-    public function upSertUser($id = 0, $dadosUsuario = []) {
-
-        $id = $id * 1; // 1
-
-        if ($id != 0 && !$this->isValidID($id)) $this->retornoAPI();
-
+    // upSert = insert + update (chamar por meio de um POST || PUT)
+    public function upSertUser($dadosUsuario = []) {
         if (count($dadosUsuario) <= 0) {
             $this->retornoAPI();
         }
 
+        $id = $dadosUsuario['id'] ?? 0;
+        $id = $id * 1; // 1
+
+        if ($id != 0 && !$this->isValidID($id)) $this->retornoAPI();
 
         $camposTabela = [
             'id' => 0,
             'email' => '',
             'senha' => '',
             'nome_usuario' => '',
-            'status' => '',
+            'status' => 1,
             'id_perfil_usuario' => 1,
-            'excluido' => '',
-            'id_usuario_criacao' => '',
-            'id_usuario_alteracao' => '',
-            'id_usuario_exclusao' => '',
-            'data_criacao' => '',
-            'data_alteracao' => '',
-            'data_exclusao' => '',
+            'excluido' => 0,
+            'id_usuario_criacao' => 1,
+            'id_usuario_alteracao' => 0,
+            'id_usuario_exclusao' => 0,
+            'data_criacao' => Date('Y-m-d H:i:s'),
+            'data_alteracao' => Date('Y-m-d H:i:s'),
+            'data_exclusao' => '0000-00-00 00:00:00'
         ];
 
+        // Date('Y-m-d H:i:s') = '2022-11-14 20:56:00'
+        $dadosUsuario = json_decode(json_encode($dadosUsuario), true);
+        $this->retornoAPI($dadosUsuario);
 
         $camposTabelaUpsert = array_merge($camposTabela, $dadosUsuario);
 
+        $this->retornoAPI($camposTabelaUpsert);
 
-        $sql = "UPDATE usuarios SET excluido = 1 WHERE id = {$id};";+
+        $cont = 0;
+        $totalArray = count($camposTabelaUpsert);
+
+        // INSERT INTO `usuarios` VALUES
+        // (1,'otto.arru@gmail.com','minhasenha','otto',1,1,0,1,1,NULL,'2022-10-04 21:26:29','2022-10-04 21:26:29','0000-00-00 00:00:00'),
+        // (2,'ottoarrueneto@hotmail.com','123456','venezo',1,1,NULL,1,0,NULL,'2022-10-11 19:59:38','2022-10-11 20:00:08','2022-10-11 20:00:08');
+
+        // INSERT INTO usuarios (id, email, nome_usuario) VALUES (10, 'fulano@info', 'fulaninho')
+        // ON DUPLICATE KEY
+        // UPDATE usuarios SET email = 'fulano@info', nome_usuario = 'fulaninho' WHERE id =10
+        $insertSQL = "INSERT INTO usuarios VALUES (";
+        $updateSQL = "UPDATE usuarios SET ";
+        
+        foreach($camposTabelaUpsert as $chave => $valor) {
+            $cont++;
+
+            // IF TERNARIO   (condicao) ? codigo se condicao verdadeira : codigo se nao atender a condicao
+            // ($cont < $totalArray) ? $sql .= "{$chave}={'$valor'}, " : $sql .= "{$chave}={'$valor'}";
+
+            if ($cont < $totalArray) {
+                $insertSQL .= "{$valor},";
+                $updateSQL .= "{$chave}='{$valor}', ";
+            } else {
+                $insertSQL .= "{$valor}";
+                $updateSQL .= "{$chave}='{$valor}'";
+            }
+
+            if ($id > 0) {
+                $updateSQL .= "WHERE id = {$id};"; // WHERE id = 10;
+            }
+        }
+
+        $insertSQL .= ")";
+        
+        $sql = "{$insertSQL} ON DUPLICATE KEY {$updateSQL}";
+        $this->retornoAPI($sql);
         $users = $this->conexao->query($sql);
-
-
     }
 
 }
@@ -119,12 +156,16 @@ class UsuariosModel {
 try {
     
     $paramsDefault = [
-        "id" => 0,
-        "nome" => '',
-        "idade" => 0,
+        "id" => 0, 
         "email" => '',
     ];
+
+    $entityBody = file_get_contents('php://input');
     
+    $dadosUsuario = json_decode(json_encode($entityBody), true);
+    $objUser =  new UsuariosModel($connection); // $connection que veio do require.
+    echo $objUser->retornoAPI( $dadosUsuario);
+
     $params =  array_merge($paramsDefault, $_REQUEST);
 
     // ...?idUsuario=1&nome=otto&idade=18 veio do navegador
@@ -137,7 +178,7 @@ try {
     // ];
 
     $objUser =  new UsuariosModel($connection); // $connection que veio do require.
-    echo $objUser->getUser($params['idUsuario']);
+    echo $objUser->upSertUser($params);
 
     // faca um cafe
 } catch (Exception $e) {
