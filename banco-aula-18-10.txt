@@ -106,6 +106,55 @@ current_timestamp(),
 
 
 
+DROP TABLE IF EXISTS `pessoas`;
+
+CREATE TABLE `pessoas` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  
+  `nome` varchar(255) NOT NULL,
+  `nome_fantasia` varchar(255) DEFAULT NULL,
+  `cpf_cnpj` varchar(14) NOT NULL,
+  `endereco` varchar(100) DEFAULT NULL,
+  `numero` varchar(5) DEFAULT NULL,
+  `complemento` varchar(60) DEFAULT NULL,
+  `bairro` varchar(100) DEFAULT NULL,
+  `cidade` varchar(150) DEFAULT NULL,
+  `estado` varchar(2) DEFAULT NULL,
+  `cep` varchar(10) DEFAULT NULL,
+  `telefone` varchar(15) DEFAULT NULL,
+  `celular` varchar(15) DEFAULT NULL,
+  `email` varchar(15) DEFAULT NULL,
+  
+  `excluido` tinyint(1) DEFAULT NULL,
+  `id_usuario_criacao` tinyint(4) NOT NULL,
+  `id_usuario_alteracao` tinyint(4) NOT NULL,
+  `id_usuario_exclusao` tinyint(4) DEFAULT NULL,
+  `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `data_alteracao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `data_exclusao` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CREATE OR REPLACE VIEW viewPermissoes as (
 SELECT u.id AS id_usuario, u.nome_usuario, pu.nome AS perfil_permissao, pu.slug AS slug_perfil, '' AS slug_acao FROM usuarios u
