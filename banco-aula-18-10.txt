@@ -132,8 +132,8 @@ CREATE TABLE `pessoas` (
   `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
   `data_alteracao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `data_exclusao` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4;
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -155,7 +155,7 @@ CREATE TABLE `pessoas` (
 
 
 
-
+/*
 CREATE OR REPLACE VIEW viewPermissoes as (
 SELECT u.id AS id_usuario, u.nome_usuario, pu.nome AS perfil_permissao, pu.slug AS slug_perfil, '' AS slug_acao FROM usuarios u
  INNER JOIN perfis_usuario pu ON u.id_perfil_usuario = pu.id 
@@ -169,4 +169,4 @@ SELECT u.id AS id_usuario, u.nome_usuario, au.nome AS acao_permissao, '' AS slug
 ) 
 
 select slug_perfil, slug_acao from viewPermissoes;
-
+*/

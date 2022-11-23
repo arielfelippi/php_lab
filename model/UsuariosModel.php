@@ -106,11 +106,9 @@ class UsuariosModel {
 
         // Date('Y-m-d H:i:s') = '2022-11-14 20:56:00'
         $dadosUsuario = json_decode(json_encode($dadosUsuario), true);
-        $this->retornoAPI($dadosUsuario);
-
         $camposTabelaUpsert = array_merge($camposTabela, $dadosUsuario);
 
-        $this->retornoAPI($camposTabelaUpsert);
+        // $this->retornoAPI($camposTabelaUpsert);
 
         $cont = 0;
         $totalArray = count($camposTabelaUpsert);
@@ -122,8 +120,27 @@ class UsuariosModel {
         // INSERT INTO usuarios (id, email, nome_usuario) VALUES (10, 'fulano@info', 'fulaninho')
         // ON DUPLICATE KEY
         // UPDATE usuarios SET email = 'fulano@info', nome_usuario = 'fulaninho' WHERE id =10
+
+
         $insertSQL = "INSERT INTO usuarios VALUES (";
         $updateSQL = "UPDATE usuarios SET ";
+
+        $arrCamposString = [
+            "email",
+            "senha",
+            "nome_usuario",
+            "data_criacao",
+            "data_alteracao",
+            "data_exclusao",
+        ];
+
+        $fnAddAspas = function($chave, $valor) use ($arrCamposString) {
+            if (in_array($chave, $arrCamposString)) {
+                return "'{$valor}'";
+            }
+
+            return "{$valor}";
+        };
         
         foreach($camposTabelaUpsert as $chave => $valor) {
             $cont++;
@@ -131,24 +148,37 @@ class UsuariosModel {
             // IF TERNARIO   (condicao) ? codigo se condicao verdadeira : codigo se nao atender a condicao
             // ($cont < $totalArray) ? $sql .= "{$chave}={'$valor'}, " : $sql .= "{$chave}={'$valor'}";
 
-            if ($cont < $totalArray) {
-                $insertSQL .= "{$valor},";
-                $updateSQL .= "{$chave}='{$valor}', ";
-            } else {
-                $insertSQL .= "{$valor}";
-                $updateSQL .= "{$chave}='{$valor}'";
+            $quandoIdForZero = ($chave === "id" && $valor <= 0);
+
+            if ($quandoIdForZero) {
+                $insertSQL .= "id,";
+                continue;
             }
 
-            if ($id > 0) {
-                $updateSQL .= "WHERE id = {$id};"; // WHERE id = 10;
+            if ($cont < $totalArray) {
+                $insertSQL .= "{$fnAddAspas($chave, $valor)},";
+                $updateSQL .= "{$chave}={$fnAddAspas($chave, $valor)},";
+            } else {
+                $insertSQL .= "{$fnAddAspas($chave, $valor)}";
+                $updateSQL .= "{$chave}={$fnAddAspas($chave, $valor)}";
             }
+
+            $updateSQL .= "WHERE id = {$id};";
+            
         }
 
         $insertSQL .= ")";
         
         $sql = "{$insertSQL} ON DUPLICATE KEY {$updateSQL}";
         $this->retornoAPI($sql);
-        $users = $this->conexao->query($sql);
+
+        try{
+
+            $users = $this->conexao->query($sql);
+        } catch (Exception $error ){
+            $msg = "ERRO query UPSERT: {$error->getCode()} <br> mensagem: {$error->getMessage()}";
+            $this->retornoAPI($msg);
+        }
     }
 
 }
@@ -156,17 +186,22 @@ class UsuariosModel {
 try {
     
     $paramsDefault = [
-        "id" => 0, 
         "email" => '',
+        "id_usuario_criacao" => 1,
+        "id_usuario_alteracao" => 1,
     ];
 
     $entityBody = file_get_contents('php://input');
+    // $entityBody = $_REQUEST['id']; // FUNCIONA PARA REQUEST DE CHAMADAS AJAX NO NAVEGADOR.
     
-    $dadosUsuario = json_decode(json_encode($entityBody), true);
-    $objUser =  new UsuariosModel($connection); // $connection que veio do require.
-    echo $objUser->retornoAPI( $dadosUsuario);
+    $dadosUsuario = json_decode($entityBody, true);
+    // $objUser =  new UsuariosModel($connection); // $connection que veio do require.
+    // echo $objUser->retornoAPI($dadosUsuario);
 
-    $params =  array_merge($paramsDefault, $_REQUEST);
+    // $params =  array_merge($paramsDefault, $dadosUsuario);
+
+    // $objUser =  new UsuariosModel($connection); // $connection que veio do require.
+    // echo $objUser->retornoAPI($dadosUsuario);
 
     // ...?idUsuario=1&nome=otto&idade=18 veio do navegador
     // $params = [
@@ -178,7 +213,7 @@ try {
     // ];
 
     $objUser =  new UsuariosModel($connection); // $connection que veio do require.
-    echo $objUser->upSertUser($params);
+    echo $objUser->upSertUser($dadosUsuario);
 
     // faca um cafe
 } catch (Exception $e) {
