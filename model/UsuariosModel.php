@@ -184,14 +184,21 @@ class UsuariosModel {
 }
 
 try {
+    $objUser =  new UsuariosModel($connection); // $connection que veio do require.
+
+    $teste = array_merge(["aviao" => 747], $_REQUEST);
     
+    echo $objUser->retornoAPI($teste);
+
+    $entityBody = file_get_contents('php://input'); // POSTMAN
+    $dadosForm = $_REQUEST['nomeUsuario'] || []; // Nabegador (GET ou POST)
+
     $paramsDefault = [
         "email" => '',
         "id_usuario_criacao" => 1,
         "id_usuario_alteracao" => 1,
     ];
 
-    $entityBody = file_get_contents('php://input');
     // $entityBody = $_REQUEST['id']; // FUNCIONA PARA REQUEST DE CHAMADAS AJAX NO NAVEGADOR.
     
     $dadosUsuario = json_decode($entityBody, true);
